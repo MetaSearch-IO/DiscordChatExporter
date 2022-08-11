@@ -26,7 +26,7 @@ internal partial class PlainTextMarkdownVisitor : MarkdownVisitor
     {
         _buffer.Append(
             emoji.IsCustomEmoji
-                ? $"{(emoji.IsAnimated? "a" : "")}:{emoji.Name}:{emoji.Id}"
+                ? $"<{(emoji.IsAnimated? "a" : "")}:{emoji.Name}:{emoji.Id}>"
                 : emoji.Name
         );
 
