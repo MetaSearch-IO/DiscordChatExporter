@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,9 +23,17 @@ public class DiscordClient
     private readonly string _token;
     private readonly Uri _baseUri = new("https://discord.com/api/v9/", UriKind.Absolute);
 
+    private readonly string? _progressFilePath = null;
+
     private TokenKind _tokenKind = TokenKind.Unknown;
 
     public DiscordClient(string token) => _token = token;
+
+    public DiscordClient(string token, string? progressFilePath)
+    {
+        _token = token;
+        _progressFilePath = progressFilePath;
+    }
 
     private async ValueTask<HttpResponseMessage> GetResponseAsync(
         string url,
@@ -177,7 +186,7 @@ public class DiscordClient
                 .ToArray();
 
             var categories = responseOrdered
-                .Where(j => j.GetProperty("type").GetInt32() == (int) ChannelKind.GuildCategory)
+                .Where(j => j.GetProperty("type").GetInt32() == (int)ChannelKind.GuildCategory)
                 .Select((j, index) => ChannelCategory.Parse(j, index + 1))
                 .ToDictionary(j => j.Id.ToString(), StringComparer.Ordinal);
 
@@ -327,13 +336,16 @@ public class DiscordClient
                     var exportedDuration = (message.Timestamp - firstMessage.Timestamp).Duration();
                     var totalDuration = (lastMessage.Timestamp - firstMessage.Timestamp).Duration();
 
-                    progress.Report(Percentage.FromFraction(
-                        // Avoid division by zero if all messages have the exact same timestamp
-                        // (which may be the case if there's only one message in the channel)
-                        totalDuration > TimeSpan.Zero
-                            ? exportedDuration / totalDuration
-                            : 1
-                    ));
+                    // Avoid division by zero if all messages have the exact same timestamp
+                    // (which may be the case if there's only one message in the channel)
+                    var progressFraction = totalDuration > TimeSpan.Zero ? exportedDuration / totalDuration : 1;
+
+                    progress.Report(Percentage.FromFraction(progressFraction));
+                    if (_progressFilePath is not null)
+                    {
+                        String.Format("[{0}] channel_id={1}, progress=\"{2}/10000\"", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss zz"),channelId.ToString(), Math.Round(progressFraction*10000)).WriteDebug(_progressFilePath);
+                    }
+                    
                 }
 
                 yield return message;
