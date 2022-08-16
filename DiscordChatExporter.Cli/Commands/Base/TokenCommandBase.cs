@@ -27,8 +27,16 @@ public abstract class TokenCommandBase : ICommand
     )]
     public bool IsBotToken { get; init; }
 
+    [CommandOption(
+        "progress",
+        EnvironmentVariable = "PROGRESS_OUTPUT_PATH",
+        Description = "Progress file path."
+    )]
+    public string? ProgressPath { get; init; }
+
+
     private DiscordClient? _discordClient;
-    protected DiscordClient Discord => _discordClient ??= new DiscordClient(Token);
+    protected DiscordClient Discord => _discordClient ??= new DiscordClient(Token, ProgressPath);
 
     public abstract ValueTask ExecuteAsync(IConsole console);
 }
