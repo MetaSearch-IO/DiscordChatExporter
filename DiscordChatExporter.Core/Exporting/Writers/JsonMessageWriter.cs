@@ -360,6 +360,14 @@ internal class JsonMessageWriter : MessageWriter
             _writer.WriteString("guildId", message.Reference.GuildId?.ToString());
             _writer.WriteEndObject();
         }
+        
+        // Referenced message
+        if (message.ReferencedMessage is not null)
+        {
+            _writer.WriteStartObject("referencedMessage");
+            await WriteMessageAsync(message.ReferencedMessage, cancellationToken);
+            _writer.WriteEndObject();
+        }
 
         _writer.WriteEndObject();
         await _writer.FlushAsync(cancellationToken);
