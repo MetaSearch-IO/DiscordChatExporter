@@ -364,9 +364,8 @@ internal class JsonMessageWriter : MessageWriter
         // Referenced message
         if (message.ReferencedMessage is not null)
         {
-            _writer.WriteStartObject("referencedMessage");
+            _writer.WritePropertyName("referencedMessage");
             await WriteMessageAsync(message.ReferencedMessage, cancellationToken);
-            _writer.WriteEndObject();
         }
 
         _writer.WriteEndObject();
